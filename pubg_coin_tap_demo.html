@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101827">
+<title>PUBG Coin Tap</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1d2b40;--gold:#ffc94a;--green:#58d68d;--text:#f6f7fb}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#25415a,var(--bg) 60%);font-family:system-ui,Arial,sans-serif;color:var(--text);min-height:100vh}
+main{max-width:520px;margin:auto;padding:20px 16px 34px}.top{text-align:center}.tag{display:inline-block;background:#30445b;border-radius:999px;padding:6px 12px;font-size:12px;color:#cde3f5}
+h1{font-size:27px;margin:12px 0 4px}.muted{color:#b7c4d5;font-size:14px}.balance{background:linear-gradient(135deg,#293d56,#182538);border:1px solid #3c526c;border-radius:20px;padding:18px;text-align:center;margin:20px 0}
+.balance small{color:#c4d2e1}.amount{font-size:34px;font-weight:800;color:var(--gold);margin-top:4px}
+.coin-area{display:flex;justify-content:center;margin:22px 0}.coin{width:190px;height:190px;border-radius:50%;border:7px solid #ffdf83;background:radial-gradient(circle at 35% 25%,#fff0a9,#ffbd28 55%,#bd7410);box-shadow:0 10px 0 #8b5c13,0 18px 36px #0007,inset 0 0 0 7px #e9a81e;color:#69410a;font-size:65px;font-weight:900;cursor:pointer;touch-action:manipulation;user-select:none}.coin:active{transform:scale(.96) translateY(4px);box-shadow:0 5px 0 #8b5c13,0 10px 22px #0007}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:var(--panel);border:1px solid #34465e;border-radius:16px;padding:14px}.card h2{font-size:16px;margin:0 0 6px}.card p{font-size:13px;color:#b7c4d5;margin:0 0 12px;line-height:1.4}.btn{border:0;border-radius:12px;background:#2d91df;color:white;padding:12px 10px;font-weight:750;width:100%;font-size:14px;cursor:pointer}.btn.gold{background:var(--gold);color:#38280a}.btn:disabled{opacity:.5}
+.full{margin-top:12px}.notice{font-size:12px;color:#9fb1c7;line-height:1.5;text-align:center;margin-top:20px}.stat{font-weight:800;color:var(--green)}.small{font-size:12px;color:#b7c4d5;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <span class="tag">MINI O‘YIN • DEMO</span>
+    <h1>🎖️ PUBG COIN TAP</h1>
+    <div class="muted">Bos • tanga yig‘ • kunlik bonus ol</div>
+  </header>
+  <section class="balance">
+    <small>JAMI VIRTUAL TANGALARING</small>
+    <div class="amount" id="balance">0 🪙</div>
+    <div class="small">Har bosishda +1 tanga</div>
+  </section>
+  <div class="coin-area"><button class="coin" id="tap" aria-label="Tanga yig‘ish">₵</button></div>
+  <div class="grid">
+    <section class="card">
+      <h2>🎁 Kunlik bonus</h2><p>Har kuni bir marta bonus ol.</p>
+      <button class="btn gold" id="daily">+100 tanga</button>
+      <div class="small" id="dailyStatus"></div>
+    </section>
+    <section class="card">
+      <h2>👥 Do‘st taklif qilish</h2><p>Taklif havolangni ulash.</p>
+      <button class="btn" id="invite">Havolani ulash</button>
+      <div class="small">Hozircha demo: takliflar serverda hisoblanmaydi.</div>
+    </section>
+    <section class="card">
+      <h2>🏆 Reyting</h2><p>Bu demo reytingi faqat shu qurilmada ko‘rinadi.</p>
+      <div class="stat" id="rank">Sening natijang: 0</div>
+    </section>
+    <section class="card">
+      <h2>⚡ Keyingi bosqich</h2><p>1000 tanga yig‘ib maqsadga yet.</p>
+      <div class="stat" id="goal">0 / 1000</div>
+    </section>
+  </div>
+  <button class="btn full" id="reset">Demo natijani qayta boshlash</button>
+  <p class="notice">Bu o‘yin demo hisoblanadi. Tangalar virtual ball, ularni haqiqiy UC yoki pulga almashtirish va’da qilinmaydi. Haqiqiy umumiy reyting va referral uchun server hamda ma’lumotlar bazasi kerak.</p>
+</main>
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+const $ = id => document.getElementById(id);
+const key = "pubgCoinTapDemoV1";
+let state = {coins:0,lastDaily:""};
+try { state = {...state, ...JSON.parse(localStorage.getItem(key) || "{}")}; } catch(e) {}
+function save(){ try{localStorage.setItem(key,JSON.stringify(state));}catch(e){} render(); }
+function today(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+function render(){
+  $("balance").textContent = (state.coins||0).toLocaleString("uz-UZ")+" 🪙";
+  $("rank").textContent = "Sening natijang: "+(state.coins||0).toLocaleString("uz-UZ");
+  $("goal").textContent = Math.min(state.coins||0,1000)+" / 1000";
+  const claimed = state.lastDaily===today();
+  $("daily").disabled=claimed;
+  $("dailyStatus").textContent=claimed?"Bugungi bonus olindi.":"Bugun hali olinmagan.";
+}
+$("tap").addEventListener("click",()=>{state.coins=(state.coins||0)+1;save();});
+$("daily").addEventListener("click",()=>{if(state.lastDaily!==today()){state.coins=(state.coins||0)+100;state.lastDaily=today();save();}});
+$("invite").addEventListener("click",async()=>{
+  const userId=tg?.initDataUnsafe?.user?.id;
+  const botLink="https://t.me/UzPUBGM_UC2026_bot";
+  const link=userId?`${botLink}?start=ref_${userId}`:botLink;
+  const message="PUBG Coin Tap demo o‘yiniga qo‘shil: "+link;
+  try { if(navigator.share){await navigator.share({title:"PUBG Coin Tap",text:message});} else if(navigator.clipboard){await navigator.clipboard.writeText(message);alert("Taklif matni nusxalandi.");} else {prompt("Taklif matnini nusxala:",message);} } catch(e) {}
+});
+$("reset").addEventListener("click",()=>{if(confirm("Demo natijasi o‘chirilsinmi?")){state={coins:0,lastDaily:""};save();}});
+render();
+</script>
+</body>
+</html>
